@@ -339,6 +339,11 @@
         
         // 从当前类别中随机获取题目
         function getRandomQuestionFromCategory() {
+            // 检查当前类别是否已完成，如果完成则切换到下一个类别
+            if (isCurrentCategoryComplete()) {
+                currentCategoryIndex = (currentCategoryIndex + 1) % categoryOrder.length;
+            }
+            
             const currentCategory = categoryOrder[currentCategoryIndex];
             const questions = questionCategories[currentCategory];
             
