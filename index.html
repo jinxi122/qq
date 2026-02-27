@@ -84,7 +84,7 @@
     
     <audio id="audioPlayer"></audio>
     
-    <style>
+    <style> 
         .music-player {
             position: fixed;
             bottom: 20px;
@@ -347,20 +347,28 @@
                 usedQuestions[currentCategory] = [];
             }
             
-            // 如果当前类别的所有题目都已使用，移动到下一个类别
-            if (usedQuestions[currentCategory].length >= questions.length) {
-                currentCategoryIndex = (currentCategoryIndex + 1) % categoryOrder.length;
-                return getRandomQuestionFromCategory(); // 递归调用获取下一个类别的题目
-            }
-            
             // 随机选择一个未使用的题目
             let randomIndex;
             do {
                 randomIndex = Math.floor(Math.random() * questions.length);
             } while (usedQuestions[currentCategory].includes(randomIndex));
             
-            usedQuestions[currentCategory].push(randomIndex);
             return questions[randomIndex];
+        }
+        
+        // 标记当前题目为已使用（只有答对时才标记）
+        function markCurrentQuestionAsUsed(questionIndex) {
+            const currentCategory = categoryOrder[currentCategoryIndex];
+            if (!usedQuestions[currentCategory].includes(questionIndex)) {
+                usedQuestions[currentCategory].push(questionIndex);
+            }
+        }
+        
+        // 检查当前类别是否所有题目都已答对
+        function isCurrentCategoryComplete() {
+            const currentCategory = categoryOrder[currentCategoryIndex];
+            const questions = questionCategories[currentCategory];
+            return usedQuestions[currentCategory] && usedQuestions[currentCategory].length >= questions.length;
         }
         
         // 启动全局计时器
@@ -459,11 +467,15 @@
                 const userAnswer = document.getElementById('answerInput').value.trim();
                 const feedbackDiv = document.getElementById('feedback');
                 
-                // 增加已答题数
-                totalQuestionsAnswered++;
+                // 获取当前题目的索引
+                const currentCategory = categoryOrder[currentCategoryIndex];
+                const questions = questionCategories[currentCategory];
+                const currentQuestionIndex = questions.findIndex(q => q.question === currentQuestion.question && q.answer === currentQuestion.answer);
                 
                 if (userAnswer === currentQuestion.answer) {
-                    // 答对了
+                    // 答对了，标记题目为已使用并增加已答题数
+                    markCurrentQuestionAsUsed(currentQuestionIndex);
+                    totalQuestionsAnswered++;
                     feedbackDiv.innerHTML = `<span style="color: #4CAF50;">✅ 答对了！</span>`;
                     
                     // 检查是否所有题目都已完成
@@ -505,13 +517,13 @@
                         }, 1500);
                     }
                 } else {
-                    // 答错了
+                    // 答错了，不标记题目为已使用，不增加已答题数
                     feedbackDiv.innerHTML = `<span style="font-size: 40px;">😞</span><br>答错了，再试试！`;
                     
-                    // 2秒后自动关闭
+                    // 2秒后自动关闭，显示同一类别的新题目
                     setTimeout(() => {
                         document.body.removeChild(questionDiv);
-                        showMathQuestion(); // 显示下一题
+                        showMathQuestion(); // 显示同一类别的新题目
                     }, 2000);
                 }
             });
