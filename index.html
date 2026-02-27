@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我来考考你啊，QQ</title>
+    <style>
+        h1{
+            color: red;
+            font-size: 30px;
+            text-align: center;
+            margin-top: 100px;
+        }
+        h3{
+            color: rgb(70, 102, 150);
+            font-size: 20px;
+            text-align: center;
+            margin-top: 50px;
+        }
+        #yusuan{
+            color: rgb(156, 76, 231);
+            font-size: 20px;
+            text-align: center;
+            margin-top: 50px;
+        }
+        #shuxue{
+            color: rgb(255, 0, 0);
+            font-size: 20px;
+            text-align: center;
+            margin-top: 50px;
+        }
+        #yingyu{
+            color: rgb(251, 255, 0);
+            font-size: 20px;
+            text-align: center;
+            margin-top: 50px;
+        }
+        button {
+            margin: 0 45px;
+            padding: 15px 30px;
+            font-size: 18px;
+            border: none;
+            cursor: pointer;
+            background-color: transparent;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+        .button-container {
+            text-align: center;
+            margin-top: 50px;
+        }
+        body {
+            background-image: url('im/DM_20260227232122_001.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>欢迎你来到本网页</h1>
+    <h3>下面请你选择一个赛道进行游戏</h3>
+    <div class="button-container">
+        <button id="yusuan">语文</button>
+        <button id="shuxue">数学</button>
+        <button id="yingyu">英语</button>
+    </div>
+    <div class="music-player">
+        <div class="current-song" id="currentSong">点击播放按钮开始播放</div>
+        <div class="music-controls">
+            <button class="music-btn" id="prevBtn">上一首</button>
+            <button class="music-btn" id="playPauseBtn">播放</button>
+            <button class="music-btn" id="nextBtn">下一首</button>
+        </div>
+        <div class="volume-control">
+            <label for="volumeSlider">音量: </label>
+            <input type="range" id="volumeSlider" min="0" max="100" value="50">
+        </div>
+    </div>
+    
+    <audio id="audioPlayer"></audio>
+    
+    <style>
+        .music-player {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            color: white;
+            z-index: 1000;
+            width: 250px;
+        }
+        .music-controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 10px;
+        }
+        .music-btn {
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            margin: 0;
+        }
+        .music-btn:hover {
+            background-color: rgba(255, 255, 255, 0.3);
+        }
+        .current-song {
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .volume-control {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        #volumeSlider {
+            width: 60%;
+        }
+    </style>
+    
+    <script>
+        const songs = [
+            { name: 'e.m4a', url: 'im/e.m4a' },
+            { name: 'king.m4a', url: 'im/king.m4a' }
+        ];
+        
+        let currentSongIndex = 0;
+        let isPlaying = false;
+        const audioPlayer = document.getElementById('audioPlayer');
+        const currentSongElement = document.getElementById('currentSong');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const volumeSlider = document.getElementById('volumeSlider');
+        
+        // 设置初始音量
+        audioPlayer.volume = 0.5;
+        
+        function loadSong(index) {
+            console.log('正在加载歌曲:', songs[index].name, songs[index].url);
+            audioPlayer.src = songs[index].url;
+            currentSongElement.textContent = `当前: ${songs[index].name}`;
+            
+            // 添加错误处理
+            audioPlayer.onerror = function() {
+                console.error('音频加载错误:', audioPlayer.error);
+                currentSongElement.textContent = `加载失败: ${songs[index].name}`;
+            };
+            
+            // 添加加载成功事件
+            audioPlayer.onloadeddata = function() {
+                console.log('音频数据加载成功:', songs[index].name);
+                if (isPlaying) {
+                    audioPlayer.play().catch(e => {
+                        console.error('播放失败:', e);
+                        currentSongElement.textContent = `播放失败: ${songs[index].name} - 点击重试`;
+                    });
+                }
+            };
+        }
+        
+        function playPause() {
+            if (isPlaying) {
+                audioPlayer.pause();
+                playPauseBtn.textContent = '播放';
+                currentSongElement.textContent = `已暂停: ${songs[currentSongIndex].name}`;
+            } else {
+                // 如果没有加载音频，先加载
+                if (!audioPlayer.src || audioPlayer.src !== window.location.origin + '/' + songs[currentSongIndex].url) {
+                    loadSong(currentSongIndex);
+                }
+                
+                audioPlayer.play().then(() => {
+                    playPauseBtn.textContent = '暂停';
+                    currentSongElement.textContent = `正在播放: ${songs[currentSongIndex].name}`;
+                }).catch(e => {
+                    console.error('播放失败:', e);
+                    currentSongElement.textContent = `播放失败 - 请点击播放按钮重试`;
+                });
+            }
+            isPlaying = !isPlaying;
+        }
+        
+        function nextSong() {
+            currentSongIndex = (currentSongIndex + 1) % songs.length;
+            loadSong(currentSongIndex);
+            if (isPlaying) {
+                audioPlayer.play().catch(e => console.error('播放下一首失败:', e));
+            }
+        }
+        
+        function prevSong() {
+            currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+            loadSong(currentSongIndex);
+            if (isPlaying) {
+                audioPlayer.play().catch(e => console.error('播放上一首失败:', e));
+            }
+        }
+        
+        // 音量控制
+        volumeSlider.addEventListener('input', function() {
+            audioPlayer.volume = this.value / 100;
+        });
+        
+        playPauseBtn.addEventListener('click', playPause);
+        nextBtn.addEventListener('click', nextSong);
+        prevBtn.addEventListener('click', prevSong);
+        
+        // 歌曲结束时自动播放下一首
+        audioPlayer.addEventListener('ended', () => {
+            console.log('歌曲结束，播放下一首');
+            nextSong();
+        });
+        
+        // 初始化加载第一首歌但不自动播放
+        loadSong(0);
+        
+        // 创建自定义警告弹窗
+        function showWarning(message) {
+            // 创建弹窗元素
+            const warningDiv = document.createElement('div');
+            warningDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background-color: rgba(0, 0, 0, 0.8);
+                color: white;
+                padding: 30px;
+                border-radius: 10px;
+                z-index: 10000;
+                text-align: center;
+                font-size: 24px;
+                box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+                animation: pulse 0.5s infinite alternate;
+            `;
+            
+            // 添加警告图标和消息
+            warningDiv.innerHTML = `
+                <div style="font-size: 60px; margin-bottom: 15px;">⚠️</div>
+                <div>${message}</div>
+                <button id="closeWarning" style="
+                    margin-top: 20px;
+                    padding: 10px 20px;
+                    background-color: #ff4444;
+                    color: white;
+                    border: none;
+                    border-radius: 5px;
+                    cursor: pointer;
+                    font-size: 18px;
+                ">确定</button>
+            `;
+            
+            // 添加动画样式
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes pulse {
+                    from { box-shadow: 0 0 20px rgba(255, 0, 0, 0.5); }
+                    to { box-shadow: 0 0 30px rgba(255, 0, 0, 0.8); }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // 添加到页面
+            document.body.appendChild(warningDiv);
+            
+            // 添加关闭事件
+            document.getElementById('closeWarning').addEventListener('click', function() {
+                document.body.removeChild(warningDiv);
+                document.head.removeChild(style);
+            });
+        }
+        
+        // 分类题库
+        const questionCategories = {
+            additionSubtraction: [
+                { question: "15 + 27 = ?", answer: "42" },
+                { question: "53 - 18 = ?", answer: "35" },
+                { question: "68 + 24 = ?", answer: "92" },
+                { question: "42 + 35 = ?", answer: "77" },
+                { question: "81 - 29 = ?", answer: "52" }
+            ],
+            multiplicationDivision: [
+                { question: "12 × 8 = ?", answer: "96" },
+                { question: "144 ÷ 12 = ?", answer: "12" },
+                { question: "15 × 7 = ?", answer: "105" },
+                { question: "196 ÷ 14 = ?", answer: "14" },
+                { question: "23 × 6 = ?", answer: "138" },
+                { question: "18 × 9 = ?", answer: "162" },
+                { question: "225 ÷ 15 = ?", answer: "15" }
+            ],
+            elementaryAlgebra: [
+                { question: "如果 x + 5 = 12，那么 x = ?", answer: "7" },
+                { question: "如果 3x = 21，那么 x = ?", answer: "7" },
+                { question: "如果 x - 8 = 15，那么 x = ?", answer: "23" },
+                { question: "如果 4x = 36，那么 x = ?", answer: "9" }
+            ],
+            middleSchool: [
+                { question: "计算：2(x + 3) = 16，求 x", answer: "5" },
+                { question: "计算：3x - 7 = 14，求 x", answer: "7" },
+                { question: "计算：(x + 2)/3 = 5，求 x", answer: "13" },
+                { question: "计算：5x + 3 = 28，求 x", answer: "5" },
+                { question: "计算：2x + 7 = 3x - 2，求 x", answer: "9" },
+                { question: "计算：4(x - 2) = 20，求 x", answer: "7" },
+                { question: "计算：x/2 + 3 = 8，求 x", answer: "10" },
+                { question: "计算：3x + 5 = 2x + 15，求 x", answer: "10" },
+                { question: "计算：2(x - 4) + 3 = 15，求 x", answer: "10" },
+                { question: "计算：5x - 2(x + 1) = 13，求 x", answer: "5" },
+                { question: "计算：(x - 3)/2 + 4 = 10，求 x", answer: "15" },
+                { question: "计算：3(x + 2) = 4x - 5，求 x", answer: "11" },
+                { question: "计算：7x - 3 = 2x + 17，求 x", answer: "4" },
+                { question: "计算：2x/3 + 5 = 11，求 x", answer: "9" }
+            ]
+        };
+        
+        // 当前类别索引和已使用的题目
+        let currentCategoryIndex = 0;
+        const categoryOrder = ['additionSubtraction', 'multiplicationDivision', 'elementaryAlgebra', 'middleSchool'];
+        let usedQuestions = {}; // 记录每个类别已使用的题目索引
+        
+        // 全局计时器变量
+        let globalTimer = null;
+        let globalStartTime = null;
+        let totalQuestionsAnswered = 0;
+        const totalQuestions = Object.values(questionCategories).reduce((sum, category) => sum + category.length, 0);
+        
+        // 从当前类别中随机获取题目
+        function getRandomQuestionFromCategory() {
+            const currentCategory = categoryOrder[currentCategoryIndex];
+            const questions = questionCategories[currentCategory];
+            
+            // 初始化当前类别的已使用题目列表
+            if (!usedQuestions[currentCategory]) {
+                usedQuestions[currentCategory] = [];
+            }
+            
+            // 如果当前类别的所有题目都已使用，移动到下一个类别
+            if (usedQuestions[currentCategory].length >= questions.length) {
+                currentCategoryIndex = (currentCategoryIndex + 1) % categoryOrder.length;
+                return getRandomQuestionFromCategory(); // 递归调用获取下一个类别的题目
+            }
+            
+            // 随机选择一个未使用的题目
+            let randomIndex;
+            do {
+                randomIndex = Math.floor(Math.random() * questions.length);
+            } while (usedQuestions[currentCategory].includes(randomIndex));
+            
+            usedQuestions[currentCategory].push(randomIndex);
+            return questions[randomIndex];
+        }
+        
+        // 启动全局计时器
+        function startGlobalTimer() {
+            if (!globalTimer) {
+                globalStartTime = Date.now();
+                globalTimer = setInterval(() => {
+                    const elapsed = Math.floor((Date.now() - globalStartTime) / 1000);
+                    const timerElement = document.getElementById('globalTimer');
+                    if (timerElement) {
+                        timerElement.textContent = `⏱️ 总用时: ${elapsed}秒 | 已答题: ${totalQuestionsAnswered}/${totalQuestions}`;
+                    }
+                }, 100);
+            }
+        }
+        
+        // 停止全局计时器
+        function stopGlobalTimer() {
+            if (globalTimer) {
+                clearInterval(globalTimer);
+                globalTimer = null;
+            }
+        }
+        
+        // 显示数学题目
+        function showMathQuestion() {
+            // 如果是第一次调用，启动全局计时器
+            if (!globalTimer) {
+                startGlobalTimer();
+            }
+            
+            // 创建题目弹窗
+            const questionDiv = document.createElement('div');
+            questionDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background-color: rgba(0, 0, 0, 0.9);
+                color: white;
+                padding: 30px;
+                border-radius: 15px;
+                z-index: 10000;
+                text-align: center;
+                font-size: 24px;
+                box-shadow: 0 0 30px rgba(0, 100, 255, 0.5);
+                width: 400px;
+            `;
+            
+            const currentQuestion = getRandomQuestionFromCategory();
+            
+            questionDiv.innerHTML = `
+                <h2 style="color: #4CAF50; margin-top: 0;">数学题目</h2>
+                <div id="globalTimer" style="font-size: 18px; color: #FFC107; margin-bottom: 10px;">⏱️ 总用时: 0秒 | 已答题: ${totalQuestionsAnswered}/${totalQuestions}</div>
+                <div style="font-size: 28px; margin: 20px 0;">${currentQuestion.question}</div>
+                <input type="text" id="answerInput" style="
+                    width: 100%;
+                    padding: 10px;
+                    font-size: 20px;
+                    text-align: center;
+                    border-radius: 5px;
+                    border: none;
+                    margin-bottom: 20px;
+                " placeholder="请输入答案">
+                <div style="display: flex; justify-content: space-between;">
+                    <button id="submitAnswer" style="
+                        padding: 10px 20px;
+                        background-color: #4CAF50;
+                        color: white;
+                        border: none;
+                        border-radius: 5px;
+                        cursor: pointer;
+                        font-size: 18px;
+                    ">提交答案</button>
+                    <button id="closeQuestion" style="
+                        padding: 10px 20px;
+                        background-color: #f44336;
+                        color: white;
+                        border: none;
+                        border-radius: 5px;
+                        cursor: pointer;
+                        font-size: 18px;
+                    ">关闭</button>
+                </div>
+                <div id="feedback" style="margin-top: 20px; font-size: 20px;"></div>
+            `;
+            
+            // 添加到页面
+            document.body.appendChild(questionDiv);
+            
+            // 聚焦到输入框
+            document.getElementById('answerInput').focus();
+            
+            // 提交答案事件
+            document.getElementById('submitAnswer').addEventListener('click', function() {
+                const userAnswer = document.getElementById('answerInput').value.trim();
+                const feedbackDiv = document.getElementById('feedback');
+                
+                // 增加已答题数
+                totalQuestionsAnswered++;
+                
+                if (userAnswer === currentQuestion.answer) {
+                    // 答对了
+                    feedbackDiv.innerHTML = `<span style="color: #4CAF50;">✅ 答对了！</span>`;
+                    
+                    // 检查是否所有题目都已完成
+                    if (totalQuestionsAnswered >= totalQuestions) {
+                        // 所有题目完成，停止计时器
+                        stopGlobalTimer();
+                        const totalTime = Math.floor((Date.now() - globalStartTime) / 1000);
+                        feedbackDiv.innerHTML = `<span style="color: #4CAF50; font-size: 24px;">🎉 恭喜！所有题目已完成！</span><br><span style="color: #FFC107;">总用时: ${totalTime}秒</span>`;
+                        
+                        // 添加重新开始按钮
+                        setTimeout(() => {
+                            const restartBtn = document.createElement('button');
+                            restartBtn.textContent = '重新开始';
+                            restartBtn.style.cssText = `
+                                margin-top: 20px;
+                                padding: 10px 20px;
+                                background-color: #2196F3;
+                                color: white;
+                                border: none;
+                                border-radius: 5px;
+                                cursor: pointer;
+                                font-size: 18px;
+                            `;
+                            restartBtn.addEventListener('click', function() {
+                                // 重置所有状态
+                                totalQuestionsAnswered = 0;
+                                usedQuestions = {};
+                                currentCategoryIndex = 0;
+                                document.body.removeChild(questionDiv);
+                                showMathQuestion();
+                            });
+                            feedbackDiv.appendChild(restartBtn);
+                        }, 500);
+                    } else {
+                        // 1.5秒后显示下一题
+                        setTimeout(() => {
+                            document.body.removeChild(questionDiv);
+                            showMathQuestion(); // 显示下一题
+                        }, 1500);
+                    }
+                } else {
+                    // 答错了
+                    feedbackDiv.innerHTML = `<span style="font-size: 40px;">😞</span><br>答错了，再试试！`;
+                    
+                    // 2秒后自动关闭
+                    setTimeout(() => {
+                        document.body.removeChild(questionDiv);
+                        showMathQuestion(); // 显示下一题
+                    }, 2000);
+                }
+            });
+            
+            // 关闭按钮事件
+            document.getElementById('closeQuestion').addEventListener('click', function() {
+                document.body.removeChild(questionDiv);
+            });
+            
+            // 回车提交答案
+            document.getElementById('answerInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    document.getElementById('submitAnswer').click();
+                }
+            });
+        }
+        
+        // 为按钮添加点击事件
+        document.getElementById('yusuan').addEventListener('click', function() {
+            showWarning('没权限');
+        });
+        
+        document.getElementById('shuxue').addEventListener('click', function() {
+            showMathQuestion();
+        });
+        
+        document.getElementById('yingyu').addEventListener('click', function() {
+            showWarning('不会出洋文题目');
+        });
+    </script>
+</body>
+</html>
